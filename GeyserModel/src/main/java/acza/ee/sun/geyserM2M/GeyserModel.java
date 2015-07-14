@@ -5,9 +5,9 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
 
-public class App 
+public class GeyserModel 
 {
-	private static final Logger logger = LogManager.getLogger(App.class);
+	private static final Logger logger = LogManager.getLogger(GeyserModel.class);
 	
     public static void main( String[] args )
     {
