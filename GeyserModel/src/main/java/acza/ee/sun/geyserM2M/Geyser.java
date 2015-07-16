@@ -24,7 +24,7 @@ public class Geyser {
 	
 	//Geyser parameters
 	private boolean DISABLE_TWO_NODE;	//Selector for 1-node or 2-node state
-	private double R; 					//EWH thermal resistance
+	private double R; 					//EWH thermal resistance Watt/kg*Day
 	private double G; 					//EWH thermal conductance
 	private double TANK_LENGTH; 		//Length of EWH in meters
 	private double TANK_VOLUME; 		//Volume of EWH in liters
@@ -43,7 +43,7 @@ public class Geyser {
 	
 	private double t_lower;		//2-Node lower temperature
 	private double t_upper; 	//2-Node upper temperature
-	private double t_inside;	//1-Node inside temperature
+	private double t_inside;	//1-Node inside temperature (TODO: AVERAGE temperature)
 	private double t_ambient;	//Ambient temperature outside EWH
 	private double v_upper;		//2-Node lower volume
 	private double v_lower;		//2-Node upper volume
@@ -75,7 +75,7 @@ public class Geyser {
 		node_state = NodeState.ONE;
 		t_lower = t_upper = t_inside = 55;
 		v_upper = TANK_VOLUME;
-		element_state = true;
+		element_state = false;
 	}
 	
 	//-----------------------------------------------------------------------------------------------------------------------------------------
@@ -102,8 +102,8 @@ public class Geyser {
 			
 			//Calculate change in INSIDE temperature and then thermal losses
 			double t_inside_before = t_inside;
-			t_inside = t_ambient + (t_inside_before - t_ambient)*Math.exp((-1.0 * step_seconds)/(c*rho*TANK_VOLUME*R)); //(3)
-			termal_energy_loss = c*rho*(0.001*TANK_VOLUME)*(t_inside_before - t_inside); //(4)
+			t_inside = thermalDecay(step_seconds, t_inside_before, t_ambient, TANK_VOLUME, R);
+			termal_energy_loss = waterEnthalpy(t_inside_before, t_inside, TANK_VOLUME);
 			
 			
 			break;
@@ -112,11 +112,14 @@ public class Geyser {
 			if(element_state){
 				element_energy_added = ELEMENT_POWER*step_seconds;
 				t_lower += deltaTemperature(element_energy_added, v_lower);
+				t_inside = averageTwoNodeTemp();
 				
 				//Assume that time steps will be small enough that error will be negligible. (6)
 				if(t_lower >= t_upper){
 					t_inside = t_lower = t_upper;
 					node_state = NodeState.ONE;
+					v_lower = 0;					//Reset v_lower and v_upper
+					v_upper = TANK_VOLUME;
 				}
 			}
 			
@@ -132,10 +135,10 @@ public class Geyser {
 				//Update t_lower and t_upper and calculate thermal losses using resistances
 				double t_lower_before = t_lower;
 				double t_upper_before = t_upper;
-				t_lower = t_ambient + (t_lower_before - t_ambient)*Math.exp((-1.0 * step_seconds)/(c*rho*TANK_VOLUME*r_lower)); //(3)
-				t_upper = t_ambient + (t_upper_before - t_ambient)*Math.exp((-1.0 * step_seconds)/(c*rho*TANK_VOLUME*r_upper)); //(3)
-				termal_energy_loss += c*rho*(0.001*TANK_VOLUME)*(t_lower_before - t_inside);
-				termal_energy_loss += c*rho*(0.001*TANK_VOLUME)*(t_upper_before - t_inside);
+				t_lower = thermalDecay(step_seconds, t_lower_before, t_ambient, v_lower, r_lower);
+				t_upper = thermalDecay(step_seconds, t_upper_before, t_ambient, v_upper, r_upper);
+				termal_energy_loss = waterEnthalpy(t_lower_before, t_lower, v_lower) + waterEnthalpy(t_upper_before, t_upper, v_upper);
+				t_inside = averageTwoNodeTemp();
 				break;
 				
 			case VERT:
@@ -159,8 +162,17 @@ public class Geyser {
 		
 		double energy_usage = 0;
 		
-		if(node_state != NodeState.TWO && usage_litres >= THRESHOLD_VOLUME)
+		v_upper -= usage_litres;
+		v_lower +=  usage_litres;
+		if(node_state == NodeState.ONE && v_lower >= THRESHOLD_VOLUME){
 			node_state = NodeState.TWO;
+			t_lower = t_upper = t_inside;	//Initialise t_lower and t_upper
+		}
+		else if(node_state == NodeState.TWO && v_lower >= TANK_VOLUME){
+			node_state = NodeState.ONE;
+			t_inside = t_lower;
+		}
+	
 		
 		if(DISABLE_TWO_NODE)
 			node_state = NodeState.ONE;
@@ -168,19 +180,18 @@ public class Geyser {
 		switch(node_state){
 		case ONE:
 			//Calculate energy leaving in the used water
-			energy_usage = waterEnthalpy(t_inside, usage_litres);
+			energy_usage = waterEnthalpy(t_inside, INLET_TEMPERATURE, usage_litres);
 			
 			//Update t_inside
 			t_inside = ((TANK_VOLUME - usage_litres)/TANK_VOLUME) * (t_inside - INLET_TEMPERATURE) + INLET_TEMPERATURE; //(1)
 			break;
 		case TWO:
 			//Calculate energy leaving in the used water
-			energy_usage = waterEnthalpy(t_upper, usage_litres);
+			energy_usage = waterEnthalpy(t_upper, INLET_TEMPERATURE, usage_litres);
 			
 			//Update t_lower, v_lower, v_upper
 			t_lower = (v_lower/(v_lower+usage_litres) * (t_lower - INLET_TEMPERATURE) + INLET_TEMPERATURE); //Error in Philip's code. (1)(5) 
-			v_upper -= usage_litres;
-			v_lower +=  usage_litres;
+			t_inside = averageTwoNodeTemp();
 			break;
 			
 			//t_upper should not be updated?? Ask Philip
@@ -191,17 +202,16 @@ public class Geyser {
 	}
 	
 	
-	//----------------------------------------------------- Useful equations -----------------------------------------------
-
+	//----------------------------------------------------- Model equations -----------------------------------------------
 	/**
 	 * Calculates the energy in a volume of water due to its temperature (pressure ignored).
-	 * It is assumed that INLET_TEMPERATURE represents ZERO energy
 	 * @param water_temperature
+	 * @param ref_temperature temperature taken as ZERO energy reference
 	 * @param liters_water
 	 * @return energy in water volume relative to inlet temperature
 	 */
-	private double waterEnthalpy(double water_temperature, double liters_water){
-		return c * rho *(liters_water * 0.001) * (water_temperature - INLET_TEMPERATURE);	//WHY DOES PHILIP NOT INCLUDE RHO?! (5)
+	private double waterEnthalpy(double water_temperature, double ref_temperature, double liters_water){
+		return c * rho *(liters_water * 0.001) * (water_temperature - ref_temperature);	//WHY DOES PHILIP NOT INCLUDE RHO?! (5) //(4)
 	}
 	/**
 	 * Calculates the CHANGE in temperature of a volume of water due to adding/removing energy.
@@ -213,8 +223,25 @@ public class Geyser {
 		return (energy/1000)/(c * rho * (liters_water * 0.001)); //WHY devide by 1000! Philip does it as well but it does not make sense. (5)
 	}
 	
-	//----------------------------------------------------- GETTERS AND SETTER-----------------------------------------------
+	/**
+	 * Calculates the NEW temperature of water after a exponential time decay.
+	 * @param time in seconds
+	 * @param t_before initial temperature
+	 * @param t_ambient ambient temperature
+	 * @param volume in liters
+	 * @param thermal_resistance
+	 * @return
+	 */
+	private double thermalDecay(double time, double t_inital, double t_ambient, double volume, double thermal_resistance){
+		return t_ambient + (t_inital - t_ambient)*Math.exp((-1.0 * (time/86400))/(c*rho*(0.001*volume)*thermal_resistance)); //(3)
+	}
 	
+	
+	private double averageTwoNodeTemp(){
+		return (v_upper/TANK_VOLUME)*t_upper + (v_lower/TANK_VOLUME)*t_lower;
+	}
+	
+	//----------------------------------------------------- GETTERS AND SETTER-----------------------------------------------
 	public void disableTwoNode(boolean request){
 		DISABLE_TWO_NODE = request;
 	}
@@ -243,6 +270,14 @@ public class Geyser {
 		return node_state.toString();
 	}
 	
+	public boolean isElement() {
+		return element_state;
+	}
+
+	public void setElement(boolean element_state) {
+		this.element_state = element_state;
+	}
+
 	public String toString(){
 
 		switch(node_state){
@@ -280,6 +315,10 @@ public class Geyser {
 				+"\"v_upper\":" + String.format("%.2f",v_upper)
 				+ "}";
 	}
+	
+	public String toCSV(){
+		return node_state.toString() + "," + String.format("%.2f,%.2f,%.2f,%.2f,%.2f", t_lower, t_upper, t_inside, v_lower, v_upper);
+	}
 
 }
 
@@ -293,7 +332,7 @@ public class Geyser {
  * 
  * 
  * (3)
- * Equation 9
+ * Equation 9. Remember R = Watt/(Kg*day) therefore time has to be expressed in DAYS. i.e. SECONDS/(60*60*24)
  * 
  * (4)
  * Equation 11

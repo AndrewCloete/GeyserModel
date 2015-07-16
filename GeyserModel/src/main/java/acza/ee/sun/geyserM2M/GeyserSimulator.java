@@ -15,6 +15,9 @@ package acza.ee.sun.geyserM2M;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.LinkedList;
 import java.util.ListIterator;
 
@@ -22,38 +25,55 @@ import java.util.ListIterator;
 public class GeyserSimulator 
 {	
 	private static final Logger logger = LogManager.getLogger(GeyserSimulator.class);
+	private static PrintWriter writer;
+	
 	
     public static void main( String[] args )
     {
-    	logger.info("Geyser model started.");
+    	// ---------------------- Sanity checking of command line arguments ---------------------------------------------
+		if( args.length != 2)
+		{
+			System.out.println( "Usage: <Input file path> <Output file path>" ) ;
+			return;
+		}
+    	String usage_filepath = args[0];
+    	//---------------------------------------------------------------------------------------------------------------
+    	logger.info("Geyser simulator started with usage file: " + usage_filepath);
         
-    	LinkedList<UsagePoint> usage_points = new LinkedList<UsagePoint>();
+    	try {
+			writer = new PrintWriter(args[1], "UTF-8");
+			writer.println("ts,usages,NODE,t_lower,t_upper,t_inside,v_lower,v_upper");
+		} catch (FileNotFoundException e) {
+			logger.error("Output file not found: ", e);
+			return;
+		} catch (UnsupportedEncodingException e) {
+			logger.error(e);
+			return;
+		}
     	
-    	//Test points
-    	usage_points.add(new UsagePoint(1436974356, 0));
-    	usage_points.add(new UsagePoint(1436974357, 0));
-    	usage_points.add(new UsagePoint(1436974358, 1));
-    	usage_points.add(new UsagePoint(1436974359, 0));
-    	usage_points.add(new UsagePoint(1436974360, 0));
-    	
+    	//Create and initialise new Geyser object
     	Geyser ewh = new Geyser();
-    	ewh.stepUsage(32);
+    	Thermostat thermostat = new Thermostat(50, 4);
     	
+    	//Import usage points from file
+    	LinkedList<UsagePoint> usage_points = UsagePoint.importUsageFromJSONFile(usage_filepath);
+    	
+    	//Iterate through usage points and step simulation
     	ListIterator<UsagePoint> usage_iterator = usage_points.listIterator();
-    	
     	UsagePoint point = usage_iterator.next();
     	while(usage_iterator.hasNext()){
     	    
     		UsagePoint next_point = usage_iterator.next();
-    		
-    		System.out.println("Point: " + point.timestamp + "," + point.usage_litres);
+    		ewh.setElement(thermostat.elementState(ewh.getInsideTemperature()));
     		
     		ewh.stepUsage(point.usage_litres);
     		ewh.stepTime(next_point.timestamp - point.timestamp);
-    		System.out.println(ewh.toJSON());
+    		writer.println(point.timestamp + "," + point.usage_litres + "," +ewh.toCSV());
     		
     		point = next_point;
     	}
+    	writer.close();
+    	logger.info("Geyser simulator finished");
     }
 
 }
