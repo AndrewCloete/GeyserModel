@@ -18,6 +18,9 @@ import org.apache.logging.log4j.LogManager;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.ListIterator;
 
@@ -40,6 +43,7 @@ public class GeyserSimulator
     	//---------------------------------------------------------------------------------------------------------------
     	logger.info("Geyser simulator started with usage file: " + usage_filepath);
         
+    	
     	try {
 			writer = new PrintWriter(args[1], "UTF-8");
 			writer.println("ts,usages,NODE,t_lower,t_upper,t_inside,v_lower,v_upper");
@@ -53,7 +57,6 @@ public class GeyserSimulator
     	
     	//Create and initialise new Geyser object
     	Geyser ewh = new Geyser();
-    	Thermostat thermostat = new Thermostat(50, 4);
     	
     	//Import usage points from file
     	LinkedList<UsagePoint> usage_points = UsagePoint.importUsageFromJSONFile(usage_filepath);
@@ -63,12 +66,12 @@ public class GeyserSimulator
     	UsagePoint point = usage_iterator.next();
     	while(usage_iterator.hasNext()){
     	    
-    		UsagePoint next_point = usage_iterator.next();
-    		ewh.setElement(thermostat.elementState(ewh.getInsideTemperature()));
-    		
+    		UsagePoint next_point = usage_iterator.next();	
+    		//ewh.setElement(point.element_state);
     		ewh.stepUsage(point.usage_litres);
     		ewh.stepTime(next_point.timestamp - point.timestamp);
-    		writer.println(point.timestamp + "," + point.usage_litres + "," +ewh.toCSV());
+    		writer.println(timestampToString(point.timestamp*1000) + "," + point.usage_litres + "," +ewh.toCSV());
+    		System.out.println(point.timestamp);
     		
     		point = next_point;
     	}
@@ -76,6 +79,11 @@ public class GeyserSimulator
     	logger.info("Geyser simulator finished");
     }
 
+    private static String timestampToString(long stamp){
+    	DateFormat df = new SimpleDateFormat("yy/MM/dd kk:mm");
+    	return df.format(new Date(stamp));
+    }
+    
 }
 
 

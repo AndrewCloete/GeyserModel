@@ -20,17 +20,15 @@ public class Geyser {
 	
 	//Geyser constants
 	private static final double rho = 1000; //Denisity of water
-	private static final double c = 1.1611; //Specific heat capacity of water	
+	private static final double c = 4.184;//1.1611; //Specific heat capacity of water	
 	
 	//Geyser parameters
 	private boolean DISABLE_TWO_NODE;	//Selector for 1-node or 2-node state
 	private double R; 					//EWH thermal resistance Watt/kg*Day
-	private double G; 					//EWH thermal conductance
 	private double TANK_LENGTH; 		//Length of EWH in meters
 	private double TANK_VOLUME; 		//Volume of EWH in liters
 	private double TANK_RADIUS;			//Radius of tank in meters
 	private double TANK_AREA;
-	private double TIMECONSTANT;		//
 	private double ELEMENT_POWER;		//Element power rating in Watt
 	private double THRESHOLD_VOLUME; 	//Threshold volume for two-node state transition
 	private double INLET_TEMPERATURE;	//Inlet temperature
@@ -58,14 +56,12 @@ public class Geyser {
 	public Geyser(){
 		
 		//Set EWH paramaters
-		DISABLE_TWO_NODE = false;
+		DISABLE_TWO_NODE = true;
 		TANK_LENGTH = 1; 		
 		TANK_VOLUME = 150; 	
 		TANK_RADIUS = Math.sqrt((TANK_VOLUME/1000)/(Math.PI*TANK_LENGTH));
 		TANK_AREA = 2*Math.PI*TANK_RADIUS*TANK_LENGTH + 2*Math.PI*TANK_RADIUS*TANK_RADIUS;
 		R = 17.992; 			
-		G = (1 / R)*(1000 / (24*TANK_AREA));	
-		TIMECONSTANT = (c / 1000)*TANK_VOLUME*R;
 		ELEMENT_POWER = 3000;	
 		THRESHOLD_VOLUME = 30; 				
 		INLET_TEMPERATURE = 20;		
@@ -73,7 +69,7 @@ public class Geyser {
 		
 		//Set initial EWH variable values. 
 		node_state = NodeState.ONE;
-		t_lower = t_upper = t_inside = 55;
+		t_lower = t_upper = t_inside = 28;
 		v_upper = TANK_VOLUME;
 		element_state = false;
 	}
