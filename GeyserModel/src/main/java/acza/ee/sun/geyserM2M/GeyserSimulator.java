@@ -46,7 +46,7 @@ public class GeyserSimulator
     	
     	try {
 			writer = new PrintWriter(args[1], "UTF-8");
-			writer.println("ts,usages,NODE,element_state,t_inside,t_lower,t_upper,v_lower,v_upper,t1");
+			writer.println("timestamp,usage,power,t_inside_real,t_inside_sim,t_inlet,t_ambient");
 		} catch (FileNotFoundException e) {
 			logger.error("Output file not found: ", e);
 			return;
@@ -57,26 +57,26 @@ public class GeyserSimulator
     	
     	
     	//Import usage points from file
-    	LinkedList<UsagePoint> usage_points = UsagePoint.importUsageFromJSONFile(usage_filepath);
+    	LinkedList<DataPoint> data_points = DataPoint.importUsageFromJSONFile(usage_filepath);
     	
     	//Create iterator.
-    	ListIterator<UsagePoint> usage_iterator = usage_points.listIterator();
+    	ListIterator<DataPoint> data_iterator = data_points.listIterator();
     	
     	//Read first datapoint
-    	UsagePoint point = usage_iterator.next();
+    	DataPoint point = data_iterator.next();
     	
     	//Create and initialise new Geyser object
-    	Geyser ewh = new Geyser(point.t1);
+    	Geyser ewh = new Geyser(point.t_inside);
     	
     	//Iterate through usage points and step simulation
-    	while(usage_iterator.hasNext()){
+    	while(data_iterator.hasNext()){
     	    
-    		UsagePoint next_point = usage_iterator.next();	
-    		ewh.setElement(point.element_state);
+    		DataPoint next_point = data_iterator.next();	
+    		ewh.setInletTemperature(point.t_inlet);
+    		ewh.setAmbientTemperature(point.t_ambient);
     		ewh.stepUsage(point.usage_litres);
-    		ewh.stepTime(next_point.timestamp - point.timestamp);
-    		writer.println(timestampToString(point.timestamp*1000) + "," + point.usage_litres + "," +ewh.toCSV() + "," + point.t1);
-    		System.out.println(point.timestamp);
+    		ewh.stepTime(next_point.timestamp - point.timestamp, point.power*1000);
+    		writer.println(timestampToString(point.timestamp*1000) + "," + point.usage_litres + "," + point.power*1000 + "," + point.t_inside + "," + ewh.toCSV());
     		
     		point = next_point;
     	}
