@@ -46,7 +46,7 @@ public class GeyserSimulator
     	
     	try {
 			writer = new PrintWriter(args[1], "UTF-8");
-			writer.println("ts,usages,NODE,t_lower,t_upper,t_inside,v_lower,v_upper");
+			writer.println("ts,usages,NODE,element_state,t_inside,t_lower,t_upper,v_lower,v_upper,t1");
 		} catch (FileNotFoundException e) {
 			logger.error("Output file not found: ", e);
 			return;
@@ -55,22 +55,27 @@ public class GeyserSimulator
 			return;
 		}
     	
-    	//Create and initialise new Geyser object
-    	Geyser ewh = new Geyser();
     	
     	//Import usage points from file
     	LinkedList<UsagePoint> usage_points = UsagePoint.importUsageFromJSONFile(usage_filepath);
     	
-    	//Iterate through usage points and step simulation
+    	//Create iterator.
     	ListIterator<UsagePoint> usage_iterator = usage_points.listIterator();
+    	
+    	//Read first datapoint
     	UsagePoint point = usage_iterator.next();
+    	
+    	//Create and initialise new Geyser object
+    	Geyser ewh = new Geyser(point.t1);
+    	
+    	//Iterate through usage points and step simulation
     	while(usage_iterator.hasNext()){
     	    
     		UsagePoint next_point = usage_iterator.next();	
-    		//ewh.setElement(point.element_state);
+    		ewh.setElement(point.element_state);
     		ewh.stepUsage(point.usage_litres);
     		ewh.stepTime(next_point.timestamp - point.timestamp);
-    		writer.println(timestampToString(point.timestamp*1000) + "," + point.usage_litres + "," +ewh.toCSV());
+    		writer.println(timestampToString(point.timestamp*1000) + "," + point.usage_litres + "," +ewh.toCSV() + "," + point.t1);
     		System.out.println(point.timestamp);
     		
     		point = next_point;

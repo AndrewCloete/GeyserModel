@@ -33,16 +33,18 @@ public class UsagePoint {
 	public final long timestamp;
 	public final double usage_litres;
 	public final boolean element_state;
+	public final int t1;
 	
 	/**
 	 * 
 	 * @param timestamp UNIX timestamp in seconds
 	 * @param usage_litres
 	 */
-	public UsagePoint(long timestamp, double usage_litres, boolean element_state){
+	public UsagePoint(long timestamp, double usage_litres, boolean element_state, int t1){
 		this.timestamp = timestamp;
 		this.usage_litres = usage_litres;
 		this.element_state = element_state;
+		this.t1 = t1;
 	}
 	
 	/**
@@ -69,17 +71,19 @@ public class UsagePoint {
 				Date date;
 				double usage;
 				boolean element;
+				int t1;
 				try {
 					date = sdf.parse((String)json_datapoint.get("server_stamp"));
 					usage = (Double)json_datapoint.get("hot_flow_ratepmin");
 					double wattage = (Double)json_datapoint.get("watt_avgpmin");
+					t1 = (Integer)json_datapoint.get("t1");
 					
 					if(wattage < 0.01)
 						element = false;
 					else
 						element = true;
 					
-					usage_points.add(new UsagePoint(date.getTime()/1000L, usage, element));
+					usage_points.add(new UsagePoint(date.getTime()/1000L, usage, element, t1));
 				} catch (ParseException e) {
 					logger.error("Unable to parse JSON.",e);
 				}

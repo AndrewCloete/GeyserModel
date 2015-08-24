@@ -20,11 +20,11 @@ public class Geyser {
 	
 	//Geyser constants
 	private static final double rho = 1000; //Denisity of water
-	private static final double c = 4.184;//1.1611; //Specific heat capacity of water	
+	private static final double c = 4184;//Specific heat capacity of water	[joule/(kg*Kelin)]
 	
 	//Geyser parameters
 	private boolean DISABLE_TWO_NODE;	//Selector for 1-node or 2-node state
-	private double R; 					//EWH thermal resistance Watt/kg*Day
+	private double R; 					//EWH thermal resistance [Kelvin/Watt]
 	private double TANK_LENGTH; 		//Length of EWH in meters
 	private double TANK_VOLUME; 		//Volume of EWH in liters
 	private double TANK_RADIUS;			//Radius of tank in meters
@@ -53,23 +53,23 @@ public class Geyser {
 	//-----------------------------------------------------------------------------------------------------------------------------------------
 	
 	
-	public Geyser(){
+	public Geyser(double t_inside_initial){
 		
 		//Set EWH paramaters
 		DISABLE_TWO_NODE = true;
 		TANK_LENGTH = 1; 		
-		TANK_VOLUME = 150; 	
+		TANK_VOLUME = 100; 	
 		TANK_RADIUS = Math.sqrt((TANK_VOLUME/1000)/(Math.PI*TANK_LENGTH));
 		TANK_AREA = 2*Math.PI*TANK_RADIUS*TANK_LENGTH + 2*Math.PI*TANK_RADIUS*TANK_RADIUS;
-		R = 17.992; 			
-		ELEMENT_POWER = 3000;	
+		R = 0.75;			
+		ELEMENT_POWER = 1600;	
 		THRESHOLD_VOLUME = 30; 				
 		INLET_TEMPERATURE = 20;		
 		ORIENTATION = Orientation.HORZ; //(5)
 		
 		//Set initial EWH variable values. 
 		node_state = NodeState.ONE;
-		t_lower = t_upper = t_inside = 28;
+		t_lower = t_upper = t_inside = t_inside_initial;
 		v_upper = TANK_VOLUME;
 		element_state = false;
 	}
@@ -216,7 +216,7 @@ public class Geyser {
 	 * @return delta T
 	 */
 	private double deltaTemperature(double energy, double liters_water){
-		return (energy/1000)/(c * rho * (liters_water * 0.001)); //WHY devide by 1000! Philip does it as well but it does not make sense. (5)
+		return energy/(c * rho * (liters_water * 0.001)); 
 	}
 	
 	/**
@@ -229,7 +229,7 @@ public class Geyser {
 	 * @return
 	 */
 	private double thermalDecay(double time, double t_inital, double t_ambient, double volume, double thermal_resistance){
-		return t_ambient + (t_inital - t_ambient)*Math.exp((-1.0 * (time/86400))/(c*rho*(0.001*volume)*thermal_resistance)); //(3)
+		return t_ambient + (t_inital - t_ambient)*Math.exp((-1.0 * time)/(c*rho*(0.001*volume)*thermal_resistance)); //(3)
 	}
 	
 	
@@ -313,7 +313,7 @@ public class Geyser {
 	}
 	
 	public String toCSV(){
-		return node_state.toString() + "," + String.format("%.2f,%.2f,%.2f,%.2f,%.2f", t_lower, t_upper, t_inside, v_lower, v_upper);
+		return node_state.toString() + "," + String.format("%b,%.2f,%.2f,%.2f,%.2f,%.2f", element_state, t_inside, t_lower, t_upper, v_lower, v_upper);
 	}
 
 }
@@ -327,7 +327,7 @@ public class Geyser {
  * Not sure if a thermostat should be part of the model. 
  * 
  * 
- * (3)
+ * (3) (FIXED. Philip used weird units, so ignore this.)
  * Equation 9. Remember R = Watt/(Kg*day) therefore time has to be expressed in DAYS. i.e. SECONDS/(60*60*24)
  * 
  * (4)
