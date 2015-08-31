@@ -26,6 +26,8 @@ import org.json.JSONObject;
 import org.json.JSONArray;
 import org.json.JSONException;
 
+import java.sql.*;
+
 public class DataPoint {
 	
 	private static final Logger logger = LogManager.getLogger(DataPoint.class);
@@ -33,7 +35,7 @@ public class DataPoint {
 	public final long timestamp;
 	public final double usage_litres;
 	public final double power;
-	public final double t_inside;
+	public final double t_outlet;
 	public final double t_far;
 	public final double t_inlet;
 	public final double t_ambient;
@@ -44,11 +46,11 @@ public class DataPoint {
 	 * @param timestamp UNIX timestamp in seconds
 	 * @param usage_litres
 	 */
-	public DataPoint(long timestamp, double usage_litres, double power, double t_inside, double t_far, double t_inlet, double t_ambient){
+	public DataPoint(long timestamp, double usage_litres, double power, double t_outlet, double t_far, double t_inlet, double t_ambient){
 		this.timestamp = timestamp;
 		this.usage_litres = usage_litres;
 		this.power = power;
-		this.t_inside = t_inside;
+		this.t_outlet = t_outlet;
 		this.t_far = t_far;
 		this.t_inlet = t_inlet;
 		this.t_ambient = t_ambient;
@@ -99,7 +101,67 @@ public class DataPoint {
 		return data_points;
 	}
 	
-	//TODO: public static LinkedList<UsagePoint> importUsageFromDatabase(DATABASE)
+	public static LinkedList<DataPoint> importUsageFromDatabase(){
+		LinkedList<DataPoint> data_points = new LinkedList<DataPoint>();
+		
+		String JDBC_DRIVER = "com.mysql.jdbc.Driver";
+		
+		String query = "SELECT * from timestamps where geyser_id=110  AND client_stamp >= '2015-08-29 00:00:00' AND client_stamp <= '2015-08-30 00:00:00'";
+		
+		Connection rdb_conn = null;
+		Statement stmt = null;
+		try{
+			//Register JDBC driver
+			Class.forName(JDBC_DRIVER);
+
+			//Open a connection
+			rdb_conn = DriverManager.getConnection("jdbc:mysql://146.232.128.163/GeyserM2M","intelligeyser","ewhM2Mnscl");
+
+			//Execute a query
+			stmt = rdb_conn.createStatement();
+			ResultSet rs = stmt.executeQuery(query);
+			
+			while (rs.next()) {
+				long server_stamp = rs.getTimestamp("server_stamp").getTime();
+				double usage = rs.getFloat("hot_flow_ratepmin");
+				double wattage = rs.getFloat("watt_avgpmin");
+				double t_inside = rs.getInt("t1");
+				double t_far = rs.getInt("t2");
+				double t_inlet = rs.getInt("t3");
+				double t_ambient = rs.getInt("t4");
+				
+				data_points.add(new DataPoint(server_stamp/1000L, usage, wattage, t_inside, t_far, t_inlet, t_ambient));
+			}
+			
+			logger.info("Successfully read database");
+			
+			stmt.close();
+			rdb_conn.close();
+		}catch(SQLException se){
+			//Handle errors for JDBC
+			logger.error("SQLException: ", se);
+		}catch(Exception e){
+			//Handle errors for Class.forName
+			logger.error("Unexpected database exception: ", e);
+		}finally{
+			//finally block used to close resources
+			try{
+				if(stmt!=null)
+					stmt.close();
+			}catch(SQLException se2){
+				logger.error("SQLException closing statement: ", se2);
+			}// nothing we can do
+			try{
+				if(rdb_conn!=null)
+					rdb_conn.close();
+			}catch(SQLException se){
+				logger.error("SQLException closing database connection: ", se);
+			}
+		}
+		
+		
+		return data_points;
+	}
 
 	
 }

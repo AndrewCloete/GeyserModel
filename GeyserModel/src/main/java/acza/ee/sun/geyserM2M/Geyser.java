@@ -21,18 +21,21 @@ public class Geyser {
 	//Geyser constants
 	private static final double rho = 1000; //Denisity of water
 	private static final double c = 4184;//Specific heat capacity of water	[joule/(kg*Kelin)]
-	
-	//Geyser parameters
 	private double R; 					//EWH thermal resistance [Kelvin/Watt]
 	private double TANK_LENGTH; 		//Length of EWH in meters
 	private double TANK_VOLUME; 		//Volume of EWH in liters
 	private double TANK_RADIUS;			//Radius of tank in meters
 	private double TANK_AREA;
+	private double ENERGY_CAPACITY;
+	
+	//Geyser parameters
+	private double t_inside;	//1-Node inside temperature 
+	private double t_ambient;	//Ambient temperature outside EWH
 
 	//Geyser variables
 	private double t_inlet;
-	private double t_inside;	//1-Node inside temperature (TODO: AVERAGE temperature)
-	private double t_ambient;	//Ambient temperature outside EWH
+	private double t_outlet;
+	private double energy_bottom_line;
 
 	//-----------------------------------------------------------------------------------------------------------------------------------------
 	
@@ -48,6 +51,8 @@ public class Geyser {
 					
 		//Set initial EWH variable values. 
 		t_inside = t_inside_initial;
+		ENERGY_CAPACITY = waterEnthalpy(55, 0, TANK_VOLUME);
+		energy_bottom_line = waterEnthalpy(t_inside_initial, 0, TANK_VOLUME);
 	}
 	
 	//-----------------------------------------------------------------------------------------------------------------------------------------
@@ -58,21 +63,19 @@ public class Geyser {
 	 */
 	public double stepTime(long step_seconds, double added_power){
 		
-		double termal_energy_loss = 0;
-		double element_energy_added = 0;
+		//Calculate energy input by element and update INSIDE temperature
+		double element_energy_added = added_power*step_seconds; 
+		t_inside += deltaTemperature(element_energy_added, TANK_VOLUME);
 		
-			//Calculate energy input by element and update INSIDE temperature
-			element_energy_added = added_power*step_seconds; 
-			t_inside += deltaTemperature(element_energy_added, TANK_VOLUME);
-			
-			
-			//Calculate change in INSIDE temperature and then thermal losses
-			double t_inside_before = t_inside;
-			t_inside = thermalDecay(step_seconds, t_inside_before, t_ambient, TANK_VOLUME, R);
-			termal_energy_loss = waterEnthalpy(t_inside_before, t_inside, TANK_VOLUME);
+		
+		//Calculate change in INSIDE temperature and then thermal losses
+		double t_inside_before = t_inside;
+		t_inside = thermalDecay(step_seconds, t_inside_before, t_ambient, TANK_VOLUME, R);
+		double termal_energy_loss = waterEnthalpy(t_inside_before, t_inside, TANK_VOLUME);
 			
 		
-		//logger.info("Time step of "+ step_seconds +" sec. " + String.format("Element gain: %.2f -  Thermal loss: %.2f watt.", element_energy_added, termal_energy_loss));
+		energy_bottom_line += (element_energy_added - termal_energy_loss);
+		
 		return  element_energy_added - termal_energy_loss;
 	}
 
@@ -83,22 +86,21 @@ public class Geyser {
 	 */
 	public double stepUsage(double usage_litres){
 		
-		double energy_usage = 0;
-		
-		//Calculate energy leaving in the used water
-		energy_usage = waterEnthalpy(t_inside, t_inlet, usage_litres);
-		
 		//Update t_inside
 		t_inside = ((TANK_VOLUME - usage_litres)/TANK_VOLUME) * (t_inside - t_inlet) + t_inlet; //(1)
 		
-		//logger.info("Usage event of "+ usage_litres +" liters: " + String.format("%.2f", energy_usage)+ " Watt");
+		//Calculate the DELTA energy of the EWH (Energy loss due to usage + enery gain due to water input.
+		// Think of this as a SWOP)
+		double energy_usage = -waterEnthalpy(t_inside, t_inlet, usage_litres);
+		energy_bottom_line += energy_usage;
+		
 		return energy_usage;
 	}
 	
 	
 	//----------------------------------------------------- Model equations -----------------------------------------------
 	/**
-	 * Calculates the energy in a volume of water due to its temperature (pressure ignored).
+	 * Calculates the energy in a volume of water due to its temperature and a reference temperature(pressure ignored).
 	 * @param water_temperature
 	 * @param ref_temperature temperature taken as ZERO energy reference
 	 * @param liters_water
@@ -144,6 +146,10 @@ public class Geyser {
 		return this.t_ambient;
 	}
 	
+	public double getEnergyContent(){
+		return this.energy_bottom_line;
+	}
+	
 	public void setInletTemperature(double t_inlet){
 		this.t_inlet = t_inlet;
 	}
@@ -164,7 +170,8 @@ public class Geyser {
 	}
 
 	public String toCSV(){
-		return String.format("%.2f,%.2f,%.2f", t_inside,t_inlet,t_ambient);
+		double t_out = (2.7*Math.pow(10,-4))*Math.pow((t_inside-60), 3) + 60;
+		return String.format("%.2f,%.2f,%.2f,%.2f,%.2f", t_inside,t_out,t_inlet,t_ambient,energy_bottom_line/1000000);
 	}
 
 }

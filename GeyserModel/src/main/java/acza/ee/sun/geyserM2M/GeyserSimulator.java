@@ -46,7 +46,7 @@ public class GeyserSimulator
     	
     	try {
 			writer = new PrintWriter(args[1], "UTF-8");
-			writer.println("timestamp,usage,power,t_inside_real,t_inside_sim,t_inlet,t_ambient");
+			writer.println("timestamp,usage,power,t_outlet(real),t_inside(sim),t_outlet(sim),t_inlet,t_ambient,energy");
 		} catch (FileNotFoundException e) {
 			logger.error("Output file not found: ", e);
 			return;
@@ -57,7 +57,8 @@ public class GeyserSimulator
     	
     	
     	//Import usage points from file
-    	LinkedList<DataPoint> data_points = DataPoint.importUsageFromJSONFile(usage_filepath);
+    	//LinkedList<DataPoint> data_points = DataPoint.importUsageFromJSONFile(usage_filepath);
+    	LinkedList<DataPoint> data_points = DataPoint.importUsageFromDatabase();
     	
     	//Create iterator.
     	ListIterator<DataPoint> data_iterator = data_points.listIterator();
@@ -66,7 +67,7 @@ public class GeyserSimulator
     	DataPoint point = data_iterator.next();
     	
     	//Create and initialise new Geyser object
-    	Geyser ewh = new Geyser(point.t_inside);
+    	Geyser ewh = new Geyser(point.t_outlet);
     	
     	//Iterate through usage points and step simulation
     	while(data_iterator.hasNext()){
@@ -76,7 +77,7 @@ public class GeyserSimulator
     		ewh.setAmbientTemperature(point.t_ambient);
     		ewh.stepUsage(point.usage_litres);
     		ewh.stepTime(next_point.timestamp - point.timestamp, point.power*1000);
-    		writer.println(timestampToString(point.timestamp*1000) + "," + point.usage_litres + "," + point.power*1000 + "," + point.t_inside + "," + ewh.toCSV());
+    		writer.println(timestampToString(point.timestamp*1000) + "," + point.usage_litres + "," + point.power*1000 + "," + point.t_outlet + "," + ewh.toCSV());
     		
     		point = next_point;
     	}
@@ -85,7 +86,7 @@ public class GeyserSimulator
     }
 
     private static String timestampToString(long stamp){
-    	DateFormat df = new SimpleDateFormat("yy/MM/dd kk:mm");
+    	DateFormat df = new SimpleDateFormat("yy/MM/dd HH:mm");
     	return df.format(new Date(stamp));
     }
     
