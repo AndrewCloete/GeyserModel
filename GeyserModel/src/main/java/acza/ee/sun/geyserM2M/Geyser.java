@@ -18,6 +18,8 @@ public class Geyser {
 	
 	private static final Logger logger = LogManager.getLogger(Geyser.class);
 	
+	public static final String CSV_HEADER = "t_sim_inside,t_sim_outlet,energy";
+	
 	//Geyser constants
 	private static final double rho = 1000; //Denisity of water
 	private static final double c = 4184;//Specific heat capacity of water	[joule/(kg*Kelin)]
@@ -39,11 +41,15 @@ public class Geyser {
 
 	//-----------------------------------------------------------------------------------------------------------------------------------------
 	
-	
-	public Geyser(double t_inside_initial){
+	/**
+	 * 
+	 * @param t_inside_initial
+	 * @param thermal_resistance of EWH in [Kelvin/Watt]
+	 */
+	public Geyser(double thermal_resistance, double t_inside_initial){
 		
 		//Set EWH paramaters
-		R = 0.4;
+		R = thermal_resistance;
 		TANK_LENGTH = 1; 		
 		TANK_VOLUME = 100; 	
 		TANK_RADIUS = Math.sqrt((TANK_VOLUME/1000)/(Math.PI*TANK_LENGTH));
@@ -170,8 +176,8 @@ public class Geyser {
 	}
 
 	public String toCSV(){
-		double t_out = (2.7*Math.pow(10,-4))*Math.pow((t_inside-60), 3) + 60;
-		return String.format("%.2f,%.2f,%.2f,%.2f,%.2f", t_inside,t_out,t_inlet,t_ambient,energy_bottom_line/1000000);
+		double t_outlet = (2.7*Math.pow(10,-4))*Math.pow((t_inside-60), 3) + 60;
+		return String.format("%.2f,%.2f,%.2f", t_inside,t_outlet,energy_bottom_line/1000000);
 	}
 
 }
