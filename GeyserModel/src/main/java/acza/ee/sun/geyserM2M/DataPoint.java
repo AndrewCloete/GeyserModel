@@ -3,7 +3,7 @@
  * AUTHOR:	Cloete A.H
  * PROJECT:	M-Eng, Inteligent geyser M2M system.	
  * ---------------------------------------------------------------------------------------------------------
- * DESCRIPTION: Datapoint representing a single entry of a set of state variables of an EWH.
+ * DESCRIPTION: Datapoint representing a single entry of a set of measured state variables of an EWH.
  * ---------------------------------------------------------------------------------------------------------
  * PURPOSE: 
  * ---------------------------------------------------------------------------------------------------------
@@ -87,7 +87,7 @@ public class DataPoint {
 	 * @param filename: JSON file containing list of UNIX timestamped usage points (seconds and litres).
 	 * @return Populated list of UsagePoints
 	 */
-	public static LinkedList<DataPoint> importUsageFromJSONFile(String filepath){
+	public static LinkedList<DataPoint> importDataFromJSONFile(String filepath){
 		
 		LinkedList<DataPoint> data_points = new LinkedList<DataPoint>();
 		
@@ -150,7 +150,7 @@ public class DataPoint {
 	 * @param end_timestamp
 	 * @return
 	 */
-	public static LinkedList<DataPoint> importUsageFromDatabase(String db_url, String db_user, String db_psk, int geyser_id, Date start_ts, Date end_ts){
+	public static LinkedList<DataPoint> importDataFromDatabase(String db_url, String db_user, String db_psk, int geyser_id, Date start_ts, Date end_ts){
 		LinkedList<DataPoint> data_points = new LinkedList<DataPoint>();
 		
 		String JDBC_DRIVER = "com.mysql.jdbc.Driver";
@@ -201,7 +201,7 @@ public class DataPoint {
 						hot_flow_ratepmin, hot_litres_tot, cold_flow_ratepmin, cold_litres_tot));
 			}
 			
-			logger.info("Successfully read database");
+			logger.info("Successfully read database with query: " + query);
 			
 			stmt.close();
 			rdb_conn.close();

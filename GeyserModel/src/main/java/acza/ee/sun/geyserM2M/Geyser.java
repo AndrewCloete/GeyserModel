@@ -46,12 +46,12 @@ public class Geyser {
 	 * @param t_inside_initial
 	 * @param thermal_resistance of EWH in [Kelvin/Watt]
 	 */
-	public Geyser(double thermal_resistance, double t_inside_initial){
+	public Geyser(double thermal_resistance, double tank_volume, double t_inside_initial){
 		
 		//Set EWH paramaters
 		R = thermal_resistance;
 		TANK_LENGTH = 1; 		
-		TANK_VOLUME = 100; 	
+		TANK_VOLUME = tank_volume; 	
 		TANK_RADIUS = Math.sqrt((TANK_VOLUME/1000)/(Math.PI*TANK_LENGTH));
 		TANK_AREA = 2*Math.PI*TANK_RADIUS*TANK_LENGTH + 2*Math.PI*TANK_RADIUS*TANK_RADIUS;
 					
