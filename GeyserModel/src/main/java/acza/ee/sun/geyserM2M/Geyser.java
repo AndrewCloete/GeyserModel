@@ -172,6 +172,8 @@ public class Geyser {
 	public String toJSON(){
 		return "{"
 				+"\"t_inside\":" + String.format("%.2f",t_inside)+ ", "
+				+"\"t_inlet\":" + String.format("%.2f",t_inlet)+ ", "
+				+"\"t_ambient\":" + String.format("%.2f",t_ambient)
 				+ "}";
 	}
 

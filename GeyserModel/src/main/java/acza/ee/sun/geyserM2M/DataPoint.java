@@ -100,16 +100,16 @@ public class DataPoint {
 			logger.info("Read file with GeyserID: " + json_object.get("geyser_id") + " and dataset length: " + json_usage_dataset.length());
 			
 			//Traverse all data entries in JSON object and populate usage list
-			SimpleDateFormat sdf  = new SimpleDateFormat("yy/MM/dd kk:mm");
+			SimpleDateFormat sdf  = new SimpleDateFormat("yy-MM-dd kk:mm:ss"); //15-09-01 18:34:53
 			for(int i = 0; i < json_usage_dataset.length(); i++){
 				JSONObject json_datapoint = (JSONObject) json_usage_dataset.get(i);
 				try {
 					Date server_stamp = sdf.parse((String)json_datapoint.get("server_stamp"));
 					Date client_stamp = sdf.parse((String)json_datapoint.get("client_stamp"));
-					double t_outlet = (Integer)json_datapoint.get("t1");
-					double t_far = (Integer)json_datapoint.get("t2");
-					double t_inlet = (Integer)json_datapoint.get("t3");
-					double t_ambient = (Integer)json_datapoint.get("t4");
+					double t_outlet = (Double)json_datapoint.get("t1");
+					double t_far = (Double)json_datapoint.get("t2");
+					double t_inlet = (Double)json_datapoint.get("t3");
+					double t_ambient = (Double)json_datapoint.get("t4");
 					boolean drip_detect = (Boolean)json_datapoint.get("drip_detect");
 					boolean valve_state = (Boolean)json_datapoint.get("valve_state");
 					boolean relay_state = (Boolean)json_datapoint.get("relay_state");
