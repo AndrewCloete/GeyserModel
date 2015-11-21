@@ -158,14 +158,14 @@ public class InputPoint {
 		return input_points;
 	}
 	
-	public static LinkedList<InputPoint> importFromDataPoints(LinkedList<DataPoint> data_points){
+	public static LinkedList<InputPoint> importFromDataPoints(LinkedList<DataStamp> data_points){
 		LinkedList<InputPoint> input_points = new LinkedList<InputPoint>();
 		
 		//Create iterator.
-    	ListIterator<DataPoint> data_iterator = data_points.listIterator();
+    	ListIterator<DataStamp> data_iterator = data_points.listIterator();
     	
     	while(data_iterator.hasNext()){
-    		DataPoint point = data_iterator.next();
+    		DataStamp point = data_iterator.next();
     		input_points.add(new InputPoint(point.server_stamp, point.t_inlet, point.t_ambient, point.hot_flow_ratepmin, point.watt_avgpmin));
     	}
 		
