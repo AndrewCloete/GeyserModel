@@ -112,7 +112,7 @@ public class Geyser {
 	 * @param liters_water
 	 * @return energy in water volume relative to inlet temperature
 	 */
-	private double waterEnthalpy(double water_temperature, double ref_temperature, double liters_water){
+	public static double waterEnthalpy(double water_temperature, double ref_temperature, double liters_water){
 		return c * rho *(liters_water * 0.001) * (water_temperature - ref_temperature);	//WHY DOES PHILIP NOT INCLUDE RHO?! (5) //(4)
 	}
 	/**

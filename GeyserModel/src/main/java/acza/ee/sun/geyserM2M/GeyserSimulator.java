@@ -40,6 +40,8 @@ public class GeyserSimulator
 	private static Date END_TIMESTAMP;
 	private static String OUTPUT_FILEPATH;
 	
+	private long sim_clock; //Virtual time of simulation environment
+	
 	
     public static void main( String[] args )
     {
@@ -74,12 +76,9 @@ public class GeyserSimulator
     	
     	GeyserSQLDatabase gdb = new GeyserSQLDatabase(DB_URL, DB_USER, DB_PSK);
     	LinkedList<DataStamp> data_points = gdb.select(GEYSER_ID, START_TIMESTAMP, END_TIMESTAMP);
-    	GeyserData gd = new GeyserData(data_points);
-    	gd.diff();
-    	gd.calculateHotEvents(0.3, 0.2);
-    	
-    	
-    	
+    	DataSegment gd = new DataSegment(data_points);
+    	DataSummary summary = new DataSummary(gd, 0.3 ,0.2);
+
     	
     	try {
     		results_writer = new PrintWriter(OUTPUT_FILEPATH, "UTF-8");
@@ -93,7 +92,7 @@ public class GeyserSimulator
     
     	
     	//Write events to file
-    	ListIterator<UsageEvent> event_iterator = gd.hot_event_set.listIterator();
+    	ListIterator<UsageEvent> event_iterator = summary.hot_event_set.listIterator();
     	results_writer.println(UsageEvent.CSV_HEADER);
     	while(event_iterator.hasNext()){
     		results_writer.println(event_iterator.next());
