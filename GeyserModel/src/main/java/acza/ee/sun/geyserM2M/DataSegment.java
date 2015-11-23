@@ -7,6 +7,7 @@ public class DataSegment {
 	
 	public LinkedList<DataStamp> stamp_set;
 	
+	private final String ewh_id;
 	private final long start_time;
 	private final long end_time;
 	private final int stamp_count;
@@ -15,6 +16,7 @@ public class DataSegment {
 	
 	public DataSegment(LinkedList<DataStamp> stamp_set){
 		this.stamp_set = stamp_set;
+		this.ewh_id = this.stamp_set.getFirst().ewh_id;
 		this.diff();
 		this.start_time = this.stamp_set.getFirst().server_stamp;
 		this.end_time = this.stamp_set.getLast().server_stamp;
@@ -24,7 +26,14 @@ public class DataSegment {
 	}
 	
 	
-	//Methods for identifying gaps, inconsistencies and other integrity issues in data
+	/* Methods for identifying gaps, inconsistencies and other integrity issues in data
+	 * 	Sum hot_dif and hotflow_rpm 
+	 * 	Server- and client stamp comparison.
+	 */
+	
+	public String getEWHid(){
+		return this.ewh_id;
+	}
 	
 	public long getStartTime(){
 		

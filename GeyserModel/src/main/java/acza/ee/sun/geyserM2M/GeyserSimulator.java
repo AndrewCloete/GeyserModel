@@ -77,7 +77,13 @@ public class GeyserSimulator
     	GeyserSQLDatabase gdb = new GeyserSQLDatabase(DB_URL, DB_USER, DB_PSK);
     	LinkedList<DataStamp> data_points = gdb.select(GEYSER_ID, START_TIMESTAMP, END_TIMESTAMP);
     	DataSegment gd = new DataSegment(data_points);
-    	DataSummary summary = new DataSummary(gd, 0.3 ,0.2);
+    	DataSummary summary = new DataSummary(gd, 0.3 ,0.2, 10, 5);
+    	
+    	logger.info("EWH ID: " + gd.getEWHid());
+    	logger.info("Number of events: " + summary.events_vol_stats.getN());
+    	logger.info("Number of large events: " + summary.l_events_volBYvol_stats.getN());
+    	logger.info("Number of small events: " + summary.s_events_volBYvol_stats.getN());
+    	
 
     	
     	try {
@@ -91,14 +97,22 @@ public class GeyserSimulator
 		}
     
     	
+    	
+    	results_writer.println(DataSummary.CSV_HEADER);
+    	results_writer.println(summary);
+    	
+    	//Write separation lines
+    	results_writer.println();
+    	results_writer.println();
+    	
     	//Write events to file
-    	ListIterator<UsageEvent> event_iterator = summary.hot_event_set.listIterator();
+    	ListIterator<UsageEvent> event_iterator = summary.getAllEvents().listIterator();
     	results_writer.println(UsageEvent.CSV_HEADER);
     	while(event_iterator.hasNext()){
     		results_writer.println(event_iterator.next());
     	}
     	
-    	//Write separation line
+    	//Write separation lines
     	results_writer.println();
     	results_writer.println();
     	
@@ -109,9 +123,7 @@ public class GeyserSimulator
     	while(stamp_iterator.hasNext()){
     		results_writer.println(stamp_iterator.next());
     	}
-    	
 
-    
     	
     	results_writer.close();
     	logger.info("Geyser simulator finished");

@@ -66,6 +66,7 @@ public class GeyserSQLDatabase {
 			ResultSet rs = stmt.executeQuery(query);
 			
 			while (rs.next()) {
+				String ewh_id = rs.getString("geyser_id");
 				long server_stamp = rs.getTimestamp("server_stamp").getTime();
 				long client_stamp = rs.getTimestamp("client_stamp").getTime();
 				double t_outlet = rs.getInt("t1");
@@ -83,7 +84,7 @@ public class GeyserSQLDatabase {
 				double cold_litres_tot = rs.getFloat("cold_litres_tot");
 				
 				
-				data_points.add(new DataStamp(server_stamp, client_stamp, 
+				data_points.add(new DataStamp(ewh_id, server_stamp, client_stamp, 
 						t_outlet, t_far, t_inlet, t_ambient,
 						drip_detect, valve_state, relay_state, 
 						watt_avgpmin, kwatt_tot, 

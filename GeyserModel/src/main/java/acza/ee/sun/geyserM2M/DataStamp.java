@@ -18,10 +18,11 @@ import java.util.Date;
 
 public class DataStamp {
 
-	public final static String CSV_HEADER = "server_stamp,client_stamp,t1,t2,t3,t4,drip_detect,valve_state,relay_state,"
+	public final static String CSV_HEADER = "ewh_id,server_stamp,client_stamp,t1,t2,t3,t4,drip_detect,valve_state,relay_state,"
 			+ "watt_avgpmin,kwatt_tot,hot_flow_ratepmin,hot_litres_tot,cold_flow_ratepmin,cold_litres_tot,hot_dif,cold_dif,kwatt_dif";
 	//TIE THIS TO THE VARIABLE NAMES: DUPLICATE CODE
 	
+	public final String ewh_id;
 	public final long server_stamp;
 	public final long client_stamp;
 	public final double t_outlet;
@@ -48,12 +49,14 @@ public class DataStamp {
 	 * @param timestamp UNIX timestamp in seconds
 	 * @param usage_litres
 	 */
-	public DataStamp(	long server_stamp, long client_stamp, 
+	public DataStamp(	String ewh_id,
+						long server_stamp, long client_stamp, 
 						double t_outlet, double t_far, double t_inlet, double t_ambient,
 						boolean drip_detect, boolean valve_state, boolean relay_state, 
 						double watt_avgpmin, double kwatt_tot,
 						double hot_flow_ratepmin, double hot_litres_tot, double cold_flow_ratepmin, double cold_litres_tot){
 		
+		this.ewh_id = ewh_id;
 		this.server_stamp = server_stamp;
 		this.client_stamp = client_stamp;
 		this.t_outlet = t_outlet;
@@ -76,7 +79,8 @@ public class DataStamp {
 	
 
 	public String toString(){
-		return "" 	+ timestampToString(server_stamp) + "," + timestampToString(client_stamp)  + "," 
+		return "" 	+ ewh_id + "," 
+					+ timestampToString(server_stamp) + "," + timestampToString(client_stamp)  + "," 
 					+ t_outlet + "," +  t_far + "," + t_inlet  + "," + t_ambient  + ","
 					+ drip_detect + "," + valve_state  + "," + relay_state + ","
 					+ watt_avgpmin + "," + kwatt_tot + ","
