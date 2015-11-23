@@ -2,7 +2,7 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>acza.ee.sun.geyserM2M</groupId>
+  <groupId>acza.sun.ee.ewh.model</groupId>
   <artifactId>GeyserModel</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <packaging>jar</packaging>
@@ -45,6 +45,12 @@
 		<groupId>org.apache.commons</groupId>
 		<artifactId>commons-math3</artifactId>
 		<version>3.0</version>
+	</dependency>
+		<dependency>
+		<groupId>acza.sun.ee.ewh.data</groupId>
+		<artifactId>ewhData</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+		<scope>compile</scope>
 	</dependency>
   </dependencies>
 </project>

@@ -9,7 +9,7 @@
  * ---------------------------------------------------------------------------------------------------------
  */
 
-package acza.ee.sun.geyserM2M;
+package acza.sun.ee.ewh.model;
 
 public class Thermostat {
 	

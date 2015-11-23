@@ -9,7 +9,7 @@
  * ---------------------------------------------------------------------------------------------------------
  */
 
-package acza.ee.sun.geyserM2M;
+package acza.sun.ee.ewh.model;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

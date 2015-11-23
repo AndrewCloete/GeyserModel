@@ -1,4 +1,4 @@
-package acza.ee.sun.geyserM2M;
+package acza.ee.sun.ewh;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -7,9 +7,7 @@ import junit.framework.TestSuite;
 /**
  * Unit test for simple App.
  */
-public class GeyserModelTest 
-    extends TestCase
-{
+public class GeyserModelTest extends TestCase{
     /**
      * Create the test case
      *

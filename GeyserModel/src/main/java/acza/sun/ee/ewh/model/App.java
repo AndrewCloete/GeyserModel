@@ -9,11 +9,17 @@
  * ---------------------------------------------------------------------------------------------------------
  */
 
-package acza.ee.sun.geyserM2M;
+package acza.sun.ee.ewh.model;
 
 
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+
+import acza.sun.ee.ewh.data.DataSegment;
+import acza.sun.ee.ewh.data.DataStamp;
+import acza.sun.ee.ewh.data.DataSummary;
+import acza.sun.ee.ewh.data.EWHSQLDatabase;
+import acza.sun.ee.ewh.data.UsageEvent;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -27,9 +33,9 @@ import java.util.ListIterator;
 import java.util.Properties;
 
 
-public class GeyserSimulator 
+public class App 
 {	
-	private static final Logger logger = LogManager.getLogger(GeyserSimulator.class);
+	private static final Logger logger = LogManager.getLogger(App.class);
 	private static PrintWriter results_writer;
 	
 	private static String DB_URL;
@@ -38,9 +44,9 @@ public class GeyserSimulator
 	private static String GEYSER_ID;
 	private static Date START_TIMESTAMP;
 	private static Date END_TIMESTAMP;
-	private static String OUTPUT_FILEPATH;
+	private static String OUTPUT_FILEPATH;	
 	
-	private long sim_clock; //Virtual time of simulation environment
+	//private long sim_clock; //Virtual time of simulation environment
 	
 	
     public static void main( String[] args )
@@ -52,7 +58,7 @@ public class GeyserSimulator
     	// ---------------------- Reading and sanity checking configuration parameters -------------------------------------------
     	Properties configFile = new Properties();
     	try {
-    		configFile.load(GeyserSimulator.class.getClassLoader().getResourceAsStream("config.properties"));
+    		configFile.load(App.class.getClassLoader().getResourceAsStream("config.properties"));
     		SimpleDateFormat sdf  = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     		
     		DB_URL = configFile.getProperty("DB_URL").trim();
@@ -73,17 +79,7 @@ public class GeyserSimulator
     	//-------------------------------------------------------------------------------------------------------
     	logger.info("Geyser simulator started with parameters: " + configFile.toString());
         
-    	
-    	GeyserSQLDatabase gdb = new GeyserSQLDatabase(DB_URL, DB_USER, DB_PSK);
-    	LinkedList<DataStamp> data_points = gdb.select(GEYSER_ID, START_TIMESTAMP, END_TIMESTAMP);
-    	DataSegment gd = new DataSegment(data_points);
-    	DataSummary summary = new DataSummary(gd, 0.3 ,0.2, 10, 5);
-    	
-    	logger.info("EWH ID: " + gd.getEWHid());
-    	logger.info("Number of events: " + summary.events_vol_stats.getN());
-    	logger.info("Number of large events: " + summary.l_events_volBYvol_stats.getN());
-    	logger.info("Number of small events: " + summary.s_events_volBYvol_stats.getN());
-    	
+
 
     	
     	try {
@@ -98,33 +94,7 @@ public class GeyserSimulator
     
     	
     	
-    	results_writer.println(DataSummary.CSV_HEADER);
-    	results_writer.println(summary);
-    	
-    	//Write separation lines
-    	results_writer.println();
-    	results_writer.println();
-    	
-    	//Write events to file
-    	ListIterator<UsageEvent> event_iterator = summary.getAllEvents().listIterator();
-    	results_writer.println(UsageEvent.CSV_HEADER);
-    	while(event_iterator.hasNext()){
-    		results_writer.println(event_iterator.next());
-    	}
-    	
-    	//Write separation lines
-    	results_writer.println();
-    	results_writer.println();
-    	
-    	
-    	//Write raw data to file
-    	ListIterator<DataStamp> stamp_iterator = gd.stamp_set.listIterator();
-    	results_writer.println(DataStamp.CSV_HEADER);
-    	while(stamp_iterator.hasNext()){
-    		results_writer.println(stamp_iterator.next());
-    	}
-
-    	
+    	results_writer.println("Hello, world!");
     	results_writer.close();
     	logger.info("Geyser simulator finished");
     	
